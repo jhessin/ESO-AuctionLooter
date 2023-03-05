@@ -1,4 +1,4 @@
-local AuctionLooter = {}
+AuctionLooter = AuctionLooter or {}
 
 AuctionLooter.name = 'AuctionLooter'
 
@@ -64,7 +64,7 @@ end
 
 function lootReadMail(_, mailId)
 	if not IsReadMailInfoReady(mailId) then
-		zo_callLater(function() lootReadMail(_, mailId) end, 10)
+		zo_callLater(lootMails, 10)
 		return
 	end
 	local _, _, _, _, _, system, customer, _, numAtt, money = GetMailItemInfo(mailId)
@@ -101,8 +101,8 @@ local function lootAuctions()
 		end
 	end
 	)
-	EVENT_MANAGER:RegisterForEvent(AuctionLooter, EVENT_MAIL_TAKE_ATTACHED_ITEM_SUCCESS,
-		function(event, mailId)
+	EVENT_MANAGER:RegisterForEvent(AuctionLooter.name, EVENT_MAIL_TAKE_ATTACHED_MONEY_SUCCESS,
+		function(_, mailId --[[ id64 ]])
 			for k, v in pairs(auctionMails) do
 				if v == mailId then
 					local _, _, sub = GetMailItemInfo(mailId)
@@ -115,12 +115,10 @@ local function lootAuctions()
 	EVENT_MANAGER:RegisterForEvent(AuctionLooter.name, EVENT_MAIL_READABLE, lootReadMail)
 end
 
--- EVENT_MANAGER:RegisterForEvent(AuctionLooter.name, EVENT_MAIL_OPEN_MAILBOX, lootAuctions)
+-- EVENT_MANAGER:RegisterForEvent(AuctionLooter.name, EVENT_MAIL_OPEN_MAILBOX, function() lootAuctions() end)
 
-function AuctionLooter.triggerLooting()
+SLASH_COMMANDS['/lootAuctions'] = function()
 	CloseMailbox()
 	RequestOpenMailbox()
 	lootAuctions()
 end
-
-SLASH_COMMANDS['/lootAuctions'] = AuctionLooter.triggerLooting
